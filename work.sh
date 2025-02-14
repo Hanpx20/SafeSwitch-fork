@@ -9,7 +9,7 @@ export VLLM_ATTENTION_BACKEND=XFORMERS
 export RAY_DEDUP_LOGS=0
 export WANDB_ENTITY=hanpx20
 export HYDRA_FULL_ERROR=1
-export USE_CHAT_TEMPLATE=true #
+export USE_CHAT_TEMPLATE=false  # seem to have bug, don't set to true
 
 # statistics for mmlu
 # small
