@@ -102,7 +102,8 @@ def main(config):
         config.trainer.default_hdfs_dir = None
     if not ray.is_initialized():
         # this is for local ray cluster
-        ray.init(_temp_dir="/home/ph16/TinyZero/tmp", runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}})
+        import os
+        ray.init(_temp_dir=os.path.join(os.getcwd(), "tmp"), runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}})
 
     ray.get(main_task.remote(config))
 

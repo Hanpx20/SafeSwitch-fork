@@ -77,6 +77,7 @@ class RayResourcePool(ResourcePool):
 
         import time, uuid
         lifetime = 'detached' if self.detached else None
+        print(f"{pg_name_prefix}{0}_{int(time.time())}_{uuid.uuid4().hex[:6]}")
         pgs = [
             placement_group(bundles=bundles, strategy=strategy, name=f"{pg_name_prefix}{idx}_{int(time.time())}_{uuid.uuid4().hex[:6]}", lifetime=lifetime)
             for idx, bundles in enumerate(pg_scheme)
