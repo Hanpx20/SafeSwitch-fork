@@ -6,10 +6,6 @@ export OUTPUT_DIR=/shared/nas2/ph16/TinyZero/checkpoints #
 export ROLLOUT_TP_SIZE=2
 export EXPERIMENT_NAME=mmlu-Qwen2.5-3B-grpo # 
 export VLLM_ATTENTION_BACKEND=XFORMERS
-export RAY_DEDUP_LOGS=0
-export WANDB_ENTITY=hanpx20
-export HYDRA_FULL_ERROR=1
-export USE_CHAT_TEMPLATE=false  # seem to have bug, don't set to true
 
 # statistics for mmlu
 # small
@@ -20,12 +16,24 @@ export USE_CHAT_TEMPLATE=false  # seem to have bug, don't set to true
 # The size of testing set: 1531
 
 
-# # Generate data for mmlu
+# # # Generate data for mmlu
 python ./examples/data_preprocess/mmlu.py --local_dir /shared/nas2/ph16/TinyZero/mmlu_data
 python ./examples/data_preprocess/mmlu.py --local_dir /shared/nas2/ph16/TinyZero/mmlu_data --all
+python ./examples/data_preprocess/mmlu.py --local_dir /shared/nas2/ph16/TinyZero/mmlu_data_qwen --template_type=qwen-instruct
+python ./examples/data_preprocess/mmlu.py --local_dir /shared/nas2/ph16/TinyZero/mmlu_data_qwen --all --template_type=qwen-instruct
 
-# # Train the model, need to set environment variables
-bash ./scripts/train_tiny_zero_grpo.sh
+
+# # # Train the model, need to set environment variables
+# bash ./scripts/train_tiny_zero_grpo.sh
 
 # # Evaluate on mmlu
-bash scripts/eval_mmlu.sh $BASE_MODEL $EXPERIMENT_NAME
+# python inference/inference.py \
+#     --model-path ${BASE_MODEL} \
+#     --input-file /shared/nas2/ph16/TinyZero/mmlu_data_qwen/test.parquet \
+#     --run-name ${EXPERIMENT_NAME} \
+#     --output-dir model_answers \
+#     --limit 1
+
+# python inference/eval_mmlu.py \
+#     --run-name ${EXPERIMENT_NAME} \
+#     --output-dir model_answers

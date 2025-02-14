@@ -34,72 +34,54 @@ pip install wandb IPython matplotlib
 
 ## Countdown task
 
-**Update: Using Tinyzero to train on MMLU**
-Follow `scripts/training_script.sh`
+**Update: Now We Can Using Tinyzero to train on MMLU**
+You can refer to `scripts/training_script.sh` for procedure, and you may have to set some environment variables.
 
 
 **Data Preparation**
 ```
 conda activate zero
 python ./examples/data_preprocess/countdown.py --local_dir {path_to_your_dataset}
+python ./examples/data_preprocess/mmlu.py --local_dir {path_to_your_dataset}
 ```
 
-### Run Training
-```
-conda activate zero
-```
-
-For the following code, if you see Out-of-vram, try add `critic.model.enable_gradient_checkpointing=True` to the script, and checkout the discussion [here](https://github.com/Jiayi-Pan/TinyZero/issues/5#issuecomment-2624161643)
-
-**Single GPU**
-
-
-Works for model <= 1.5B. For Qwen2.5-0.5B base, we know it fails to learn reasoning.
-
-```
-export N_GPUS=1
-export BASE_MODEL={path_to_your_model}
-export DATA_DIR={path_to_your_dataset}
-export ROLLOUT_TP_SIZE=1
-export EXPERIMENT_NAME=countdown-qwen2.5-0.5b
-export VLLM_ATTENTION_BACKEND=XFORMERS
-
-bash ./scripts/train_tiny_zero.sh
-```
-
-**3B+ model**
-In this case, the base model is able to develop sophisticated reasoning skills.
-```
-export N_GPUS=2
-export BASE_MODEL={path_to_your_model}
-export DATA_DIR={path_to_your_dataset}
-export ROLLOUT_TP_SIZE=2
-export EXPERIMENT_NAME=countdown-qwen2.5-3b
-export VLLM_ATTENTION_BACKEND=XFORMERS
-
-bash ./scripts/train_tiny_zero.sh
-```
-
-### Instruct Ablation
-We experiment with QWen-2.5-3B Instruct too.
-**Data Preparation**
-To follow chat template, we need to reprocess the data:
-```
-conda activate zero
-python examples/data_preprocess/countdown.py --template_type=qwen-instruct --local_dir={path_to_your_dataset}
-```
+If using a Qwen-Instruct model, add the parameter: `--template_type=qwen-instruct`
 
 **Training**
+
 ```
+conda activate zero
+```
+For the following code, if you see Out-of-vram, try add `critic.model.enable_gradient_checkpointing=True` to the script, and checkout the discussion [here](https://github.com/Jiayi-Pan/TinyZero/issues/5#issuecomment-2624161643)
+
+The code will read the `data_source` column in data file and decide which reward function to use.
+```
+export CUDA_VISIBLE_DEVICES=0,5
 export N_GPUS=2
 export BASE_MODEL={path_to_your_model}
 export DATA_DIR={path_to_your_dataset}
 export ROLLOUT_TP_SIZE=2
-export EXPERIMENT_NAME=countdown-qwen2.5-3b-instruct
+export EXPERIMENT_NAME={name}
 export VLLM_ATTENTION_BACKEND=XFORMERS
 
 bash ./scripts/train_tiny_zero.sh
 ```
+
+**Evaluation**
+For evaluating on MMLU, run:
+```
+python inference/inference.py \
+    --model-path ${model_id} \
+    --input-file ${data_file} \
+    --run-name ${run_name} \
+    --output-dir model_answers \
+    --limit 1
+
+python inference/eval_mmlu.py \
+    --run-name ${run_name} \
+    --output-dir model_answers
+```
+
 
 ## Acknowledge
 * We run our experiments based on [veRL](https://github.com/volcengine/verl).

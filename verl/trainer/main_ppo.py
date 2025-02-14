@@ -103,8 +103,6 @@ def main(config):
     if not ray.is_initialized():
         # this is for local ray cluster
         import os
-        print(os.path.join(os.getcwd(), "tmp"))
-        exit(0)
         ray.init(_temp_dir=os.path.join(os.getcwd(), "tmp"), runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}})
 
     ray.get(main_task.remote(config))

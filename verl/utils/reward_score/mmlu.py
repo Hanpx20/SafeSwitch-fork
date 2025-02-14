@@ -15,16 +15,25 @@
 import re
 
 
-def extract_solution(solution_str, method='strict'):
-    assert method in ['strict', 'flexible']
-    if len(solution_str) == 1:
-        return solution_str
-    if len(solution_str) == 3:
-        return solution_str[1]
-    matches = re.findall(r'{(.*?)}', solution_str)
-    return matches[-1].strip().upper() if matches else None
+def extract_solution(solution_str):
+    """Extract the equation from the solution string."""
+    # Remove everything before the first "Assistant:"
+    if "Assistant:" in solution_str:
+        solution_str = solution_str.split("Assistant:", 1)[1]
+    elif "<|im_start|>assistant" in solution_str:
+        solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
 
+    solution_str = solution_str.split('\n')[-1]
 
+    answer_pattern = r'<answer>(.*?)</answer>'
+    match = re.finditer(answer_pattern, solution_str)
+    matches = list(match)
+    if matches:
+        final_answer = matches[-1].group(1).strip()
+        final_answer = "".join(re.findall(r"[A-Z]", final_answer))
+    else:
+        final_answer = None
+    return final_answer
 
 def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=1.):
     """The scoring function for GSM8k.
@@ -38,9 +47,7 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0.1,
         format_score: the score for the format
         score: the score for the correct answer
     """
-    answer = extract_solution(solution_str=solution_str, method=method)
-    # print(solution_str, ground_truth)
-    # exit(0)
+    answer = extract_solution(solution_str=solution_str)
     if answer is None:
         return 0
     else:

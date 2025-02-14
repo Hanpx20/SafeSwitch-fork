@@ -120,6 +120,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     prompts = load_question_file(args.input_file)
+    os.makedirs(os.path.join(args.output_dir, args.run_name), exist_ok=True)
     answer_file = os.path.join(args.output_dir, args.run_name, "answers.jsonl")
     print(f"Output to {answer_file}")
 

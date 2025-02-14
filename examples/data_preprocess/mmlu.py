@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--local_dir', default='data/mmlu')
     parser.add_argument('--all', action='store_true')
+    parser.add_argument('--template_type', type=str, default='base')
 
     args = parser.parse_args()
     if args.all:
@@ -73,9 +74,21 @@ if __name__ == '__main__':
 
         def process_fn(example, idx):
             example['choices'] = ['(' + id_to_alpha[idx] + ') ' + choice for idx, choice in enumerate(example['choices'])]
+            question_base = example.pop('question') + '\nChoose you answer from the following choices:\n' + '\n'.join(example['choices'])
+            cot_prompt = "Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer> (C) </answer>."
             
-            question = "Question: " + example.pop('question') + '\nChoices:\n' + '\n'.join(example['choices']) + "\nPlease express your thought step by step. Give your final answer, a single letter, between '(' and ')'."
-
+            if args.template_type == 'base':
+                question = "A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.\n"
+                question += "User: " + question_base + "\n" + cot_prompt + "\n"
+                question += "Assistant: Let me solve this step by step.\n<think>"
+            elif args.template_type == 'qwen-instruct':
+                """This works for Qwen Instruct Models"""
+                question = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n"""
+                question += f"""<|im_start|>user\n{question_base}\n{cot_prompt}<|im_end|>"""
+                question += """\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+            else:
+                raise ValueError(f"Invalid template_type: {args._type}")
+        
             answer_raw = example.pop('answer')
             solution = id_to_alpha[answer_raw]
             data = {
