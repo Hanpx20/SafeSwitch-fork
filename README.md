@@ -34,6 +34,10 @@ pip install wandb IPython matplotlib
 
 ## Countdown task
 
+**Update: Using Tinyzero to train on MMLU**
+Follow `scripts/training_script.sh`
+
+
 **Data Preparation**
 ```
 conda activate zero

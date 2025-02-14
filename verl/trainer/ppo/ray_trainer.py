@@ -360,8 +360,6 @@ class RayPPOTrainer(object):
                     return sys_prompt + '\n\n' + prompt + '\n'
                 else:
                     return prompt + '\n'
-        print("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWw")
-        print(self.use_chat_template)
         # TODO: we have to make sure the batch size is divisible by the dp size
         from verl.utils.dataset.rl_dataset import RLHFDataset, collate_fn
         self.train_dataset = RLHFDataset(parquet_files=self.config.data.train_files,
