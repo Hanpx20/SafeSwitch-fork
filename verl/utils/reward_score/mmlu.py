@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import re
-
+import random
 
 def extract_solution(solution_str):
     """Extract the equation from the solution string."""
@@ -23,7 +23,6 @@ def extract_solution(solution_str):
     elif "<|im_start|>assistant" in solution_str:
         solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
 
-    solution_str = solution_str.split('\n')[-1]
 
     answer_pattern = r'<answer>(.*?)</answer>'
     match = re.finditer(answer_pattern, solution_str)
@@ -48,6 +47,14 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0.1,
         score: the score for the correct answer
     """
     answer = extract_solution(solution_str=solution_str)
+    
+    do_print = random.randint(1, 1024) == 1
+    if do_print:
+        print(f"--------------------------------")
+        print(f"Answer: {ground_truth}")
+        print(f"Extracted answer: {answer}")
+        print(f"Solution string: {solution_str}")
+        
     if answer is None:
         return 0
     else:

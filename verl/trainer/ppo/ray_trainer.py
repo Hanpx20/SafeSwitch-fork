@@ -415,6 +415,9 @@ class RayPPOTrainer(object):
         data_source_lst = []
         for test_data in self.val_dataloader:
             test_batch = DataProto.from_single_dict(test_data)
+            '''
+            
+            '''
             # test_batch = test_batch.to('cuda')
 
             # we only do validation on rule-based rm
@@ -429,12 +432,34 @@ class RayPPOTrainer(object):
                 'do_sample': False,
                 'validate': True,
             }
-
+            '''
+            (main_task pid=974895) DataProto(batch=TensorDict(                                                                                                        
+            (main_task pid=974895)     fields={                                                                                                                       
+            (main_task pid=974895)         attention_mask: Tensor(shape=torch.Size([1024, 2048]), device=cpu, dtype=torch.int64, is_shared=False),                    
+            (main_task pid=974895)         input_ids: Tensor(shape=torch.Size([1024, 2048]), device=cpu, dtype=torch.int64, is_shared=False),
+            (main_task pid=974895)         position_ids: Tensor(shape=torch.Size([1024, 2048]), device=cpu, dtype=torch.int64, is_shared=False)},
+            (main_task pid=974895)     batch_size=torch.Size([1024]),
+            (main_task pid=974895)     device=None,
+            (main_task pid=974895)     is_shared=False), non_tensor_batch={}, meta_info={'eos_token_id': 151645, 'pad_token_id': 151645, 'recompute_log_prob': False,
+            'do_sample': False, 'validate': True})
+            '''
             # pad to be divisible by dp_size
             test_gen_batch_padded, pad_size = pad_dataproto_to_divisor(test_gen_batch, self.actor_rollout_wg.world_size)
             test_output_gen_batch_padded = self.actor_rollout_wg.generate_sequences(test_gen_batch_padded)
             # unpad
             test_output_gen_batch = unpad_dataproto(test_output_gen_batch_padded, pad_size=pad_size)
+            '''
+            (main_task pid=920982) DataProto(batch=TensorDict(
+            (main_task pid=920982)     fields={
+            (main_task pid=920982)         attention_mask: Tensor(shape=torch.Size([1024, 3072]), device=cpu, dtype=torch.int64, is_shared=False),
+            (main_task pid=920982)         input_ids: Tensor(shape=torch.Size([1024, 3072]), device=cpu, dtype=torch.int64, is_shared=False),
+            (main_task pid=920982)         position_ids: Tensor(shape=torch.Size([1024, 3072]), device=cpu, dtype=torch.int64, is_shared=False),
+            (main_task pid=920982)         prompts: Tensor(shape=torch.Size([1024, 2048]), device=cpu, dtype=torch.int64, is_shared=False),
+            (main_task pid=920982)         responses: Tensor(shape=torch.Size([1024, 1024]), device=cpu, dtype=torch.int64, is_shared=False)},
+            (main_task pid=920982)     batch_size=torch.Size([1024]),
+            (main_task pid=920982)     device=cpu,
+            (main_task pid=920982)     is_shared=False), non_tensor_batch={}, meta_info={})
+            '''
             print('validation generation end')
 
             test_batch = test_batch.union(test_output_gen_batch)
@@ -511,7 +536,6 @@ class RayPPOTrainer(object):
         all_wg = {}
         self.wg_dicts = []
         for resource_pool, class_dict in self.resource_pool_to_cls.items():
-            print("WWW" + str(class_dict))
             worker_dict_cls = create_colocated_worker_cls(class_dict=class_dict)
             wg_dict = self.ray_worker_group_cls(resource_pool=resource_pool, ray_cls_with_init=worker_dict_cls)
             spawn_wg = wg_dict.spawn(prefix_set=class_dict.keys())

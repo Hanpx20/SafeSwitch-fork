@@ -225,7 +225,7 @@ class ActorRolloutRefWorker(Worker):
 
         # TODO: add more optimizer args into config
         if self._is_actor:
-            from verl.utils.torch_functional import get_constant_schedule_with_warmup
+            from verl.utils.torch_functional import get_constant_schedule_with_warmup, get_cosine_schedule_with_warmup
             actor_optimizer = optim.AdamW(actor_module_fsdp.parameters(),
                                           lr=optim_config.lr,
                                           betas=optim_config.get('betas', (0.9, 0.999)),
@@ -236,9 +236,16 @@ class ActorRolloutRefWorker(Worker):
             num_warmup_steps = int(num_warmup_steps_ratio * total_steps)
 
             print(f'Total steps: {total_steps}, num_warmup_steps: {num_warmup_steps}')
-
-            actor_lr_scheduler = get_constant_schedule_with_warmup(optimizer=actor_optimizer,
+            if self.config.actor.optim.lr_scheduler == 'cosine':
+                actor_lr_scheduler = get_cosine_schedule_with_warmup(optimizer=actor_optimizer,
+                                                                     num_warmup_steps=num_warmup_steps,
+                                                                     num_training_steps=total_steps,
+                                                                     )
+            elif self.config.actor.optim.lr_scheduler == 'constant':
+                actor_lr_scheduler = get_constant_schedule_with_warmup(optimizer=actor_optimizer,
                                                                    num_warmup_steps=num_warmup_steps)
+            else:
+                raise ValueError(f'Unsupported lr_scheduler: {self.config.actor.lr_scheduler}')
         else:
             actor_optimizer = None
             actor_lr_scheduler = None
@@ -642,9 +649,18 @@ class CriticWorker(Worker):
 
         print(f'Total steps: {total_steps}, num_warmup_steps: {num_warmup_steps}')
 
-        from verl.utils.torch_functional import get_constant_schedule_with_warmup
-        critic_lr_scheduler = get_constant_schedule_with_warmup(optimizer=critic_optimizer,
+        from verl.utils.torch_functional import get_constant_schedule_with_warmup, get_cosine_schedule_with_warmup
+        
+        if self.optim.lr_scheduler == 'cosine':
+            critic_lr_scheduler = get_cosine_schedule_with_warmup(optimizer=critic_optimizer,
+                                                                    num_warmup_steps=num_warmup_steps,
+                                                                    num_training_steps=total_steps,
+                                                                    )
+        elif self.optim.lr_scheduler == 'constant':
+            critic_lr_scheduler = get_constant_schedule_with_warmup(optimizer=critic_optimizer,
                                                                 num_warmup_steps=num_warmup_steps)
+        else:
+            raise ValueError(f'Unsupported lr_scheduler: {self.optim.lr_scheduler}')
 
         return critic_module, critic_optimizer, critic_lr_scheduler
 

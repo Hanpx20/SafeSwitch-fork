@@ -7,6 +7,7 @@ data.max_prompt_length=1024 \
 data.max_response_length=1024 \
 actor_rollout_ref.model.path=$BASE_MODEL \
 actor_rollout_ref.actor.optim.lr=1e-6 \
+actor_rollout_ref.actor.optim.lr_scheduler=cosine \
 actor_rollout_ref.actor.ppo_mini_batch_size=16 \
 actor_rollout_ref.actor.ppo_micro_batch_size=8 \
 actor_rollout_ref.rollout.log_prob_micro_batch_size=8 \

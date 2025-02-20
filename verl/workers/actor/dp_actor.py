@@ -142,7 +142,6 @@ class DataParallelPPOActor(BasePPOActor):
 
     def _optimizer_step(self):
         assert self.config.grad_clip is not None
-
         if isinstance(self.actor_module, FSDP):
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
